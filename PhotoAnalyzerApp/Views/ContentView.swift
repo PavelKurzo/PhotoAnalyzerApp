@@ -16,15 +16,26 @@ struct ContentView: View {
     @StateObject private var editorVM = ImageEditorViewModel()
     @State private var showPhotoPicker = false
     @State private var selectedProject: ProjectImage?
+    @State private var searchText = ""
+    
+    private var filteredProjects: [ProjectImage] {
+        if searchText.isEmpty {
+            return projects
+        } else {
+            return projects.filter { project in
+                project.name.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
     
     var body: some View {
         ZStack {
             VStack {
                 toolbar()
                 
-                SearchField(searchText: .constant(""))
+                SearchField(searchText: $searchText)
                 
-                ProjectListView(projects: projects) { project in
+                ProjectListView(projects: filteredProjects) { project in
                     withAnimation {
                         selectedProject = project
                     }
@@ -32,8 +43,13 @@ struct ContentView: View {
                 Spacer()
             }
             .overlay {
-                if projects.isEmpty {
-                    noProjectsYet()
+                if filteredProjects.isEmpty {
+                    if searchText.isEmpty {
+                        noProjectsYet()
+                    } else {
+                        Text("No results found")
+                            .font(.system(size: 19, weight: .medium))
+                    }
                 }
             }
             .padding()
